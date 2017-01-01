@@ -132,7 +132,9 @@
     var form_elements = form.elements;
 
     form.addEventListener('submit', (evt) => {
-        return false;
+      var target = evt.target || evt.srcElement;
+
+      return false;
     });
 
     form_elements['password'].addEventListener('change', (evt) => {
