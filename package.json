@@ -1,0 +1,24 @@
+{
+  "name": "nodemainjs",
+  "version": "1.0.0",
+  "description": "this project is to demonstrate our capability to use nodejs for web development",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \\\"Error: no test specified\\\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YuryNoh930508/TEMP_NAME.git"
+  },
+  "author": "yurynoh",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/YuryNoh930508/TEMP_NAME/issues"
+  },
+  "homepage": "https://github.com/YuryNoh930508/TEMP_NAME#readme",
+  "dependencies": {
+    "formidable": "^1.0.17",
+    "hasha": "^2.2.0"
+  }
+}
