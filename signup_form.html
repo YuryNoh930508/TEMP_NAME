@@ -14,21 +14,21 @@
       font-size: calc(12px + .5vw); /* 뷰 포트 사이즈가 아무리 작아저도 최소 12px 사이즈를 유지 */
     }
 
+    form {
+      width: 500px;
+      margin: 100px 0 0 calc(50% - 250px);
+    }
     .input_container {
       position: relative;
-      width: 500px;
-      margin-top: 1px;
-      border: 1px solid #CCC;
+      border: 1px solid #CCC; border-bottom: 0;
     }
-    .input_container > input:not([type='submit']),
-    .input_container > .labels,
-    .input_container > .requirements {
+    form > input[type='submit'], .input_container, .input_container > * {
       width: 100%;
     }
     /* submit을 제외한 input들은 모두 기본 투명 상태에서 '1.포커스 || 2.내용이 존재'와 같은 상태일 때 불 투명해짐 */
     .input_container > input:not([type='submit']) {
       background: white;
-      padding: 10px 5px;
+      padding: .2em .1em;
       outline: 0; border: 0;
       opacity: 0;
       transition: opacity 0.18s;
@@ -97,7 +97,7 @@
        placeholder  = ' '
        autocomplete = 'off'
        required>
-      <div class='requirements'></div>
+      <div class='requirements'>패스워드와 패스워드 확인란이 불 일치합니다</div>
     </div>
     <div class='input_container'>
       <label class='labels' for='email'>이메일</label>
@@ -121,40 +121,69 @@
       <div class='requirements'>이름을 작성해주세요</div>
     </div>
     <input
-     name  = 'submit'
+     name  = 'submit_button'
      type  = 'submit'
      value = '회원가입'
      disabled>
   </form>
 
   <script type="text/javascript" language="javascript">
-    var form          = document.forms['signup_form'];
-    var form_elements = form.elements;
+    var form               = document.forms['signup_form'];
+    var form_elements      = form.elements;
+    var set_timeout_id     = 0;
+    var xhttp_ajax_request = new XMLHttpRequest();
 
-    form.addEventListener('submit', (evt) => {
+    /* 아이디 중복확인 ajax 요청에 대한 응답이 있을 때 마다 이벤트 감지 */
+    xhttp_ajax_request.addEventListener('readystatechange', (evt) => {
       var target = evt.target || evt.srcElement;
 
-      return false;
+      if (target.readyState === 4) {
+        if (target.status === 200) {
+          alert('사용할 수 있는 아이디입니다');
+        } else if (target.status === 203) {
+          alert('중복되는 아이디입니다');
+        } else if (target.status === 404) {
+          alert('잘못된 접근입니다');
+        }
+      }
     });
+    /* 폼을 submit할 때 마다 이벤트 감지 */
+    form.addEventListener('submit', (evt) => {
+      form_elements['submit_button'].disabled = true;
+      form_elements['password_confirm'].disabled = true;
+    });
+    /* 아이디 입력이 바뀔 때 마다 이벤트 감지 */
+    form_elements['id'].addEventListener('change', (evt) => {
+      var target = evt.target || evt.srcElement;
 
-    form_elements['password'].addEventListener('change', (evt) => {
+      /* 아이디 입력 란이 형식에 맞춰 작성되었을 때 0.1초 후에 ajax request 실행을 스케쥴함, 그 전에 새로운 입력이 생기면 취소하고 0.1초 후에 새로 스케쥴함 */
+      clearTimeout(set_timeout_id);
+      if(target.validity.valid) {
+        set_timeout_id = setTimeout(() => {
+          xhttp_ajax_request.open('POST', 'id_duplicate_check', true);
+          xhttp_ajax_request.send('id=' + target.value);
+        }, 1000);
+      }
+    });
+    /* 패스워드 입력란에 키보드 입력 발생 이벤트 감지 */
+    form_elements['password'].addEventListener('keyup', (evt) => {
       var target = evt.target || evt.srcElement;
 
       /* (1.패스워드란 not 공백 + 패턴미스매치 2.패스워드란 not 공백 + 패턴 일치 3.패스워드란 공백)와 같은 상황에 따라 패스워드 확인란의 패턴과 에러메세지 변환  */
       if (target.value !== '') {
-        if (target.validity.patternMismatch) {
-          form_elements['password_confirm'].nextElementSibling.innerText = '패스워드 부터 규칙에 맞춰서 작성해주세요';
-          form_elements['password_confirm'].pattern = '더미 패턴';
-        } else {
+        if (target.validity.valid) {
           form_elements['password_confirm'].nextElementSibling.innerText = '패스워드와 패스워드 확인란이 불 일치합니다';
           form_elements['password_confirm'].pattern = target.value;
+        } else {
+          form_elements['password_confirm'].nextElementSibling.innerText = '패스워드 부터 규칙에 맞춰서 작성해주세요';
+          form_elements['password_confirm'].pattern = '더미 패턴';
         }
       } else if (target.value === '') {
         form_elements['password_confirm'].nextElementSibling.innerText = '패스워드를 먼저 작성해주세요';
         form_elements['password_confirm'].pattern = '더미 패턴';
       }
     });
-
+    /* 폼의 모든 입력란에 키가 키보드 입력 발생 이벤트 감지 */
     for (var i = 0; i < form.length; i++) {
       form[i].addEventListener('keyup', (evt) => {
         var target     = evt.target || evt.srcElement;
@@ -168,7 +197,7 @@
         }
 
         if (can_submit) {
-            form_elements['submit'].disabled = false;
+          form_elements['submit_button'].disabled = false;
         }
       }); // end of form[i].addEventListener(...) {...}
     }     // end of for(...) {...}
